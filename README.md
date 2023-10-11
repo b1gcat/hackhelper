@@ -14,8 +14,12 @@ go env -w GOPROXY=https://goproxy.cn,direct
 #package
 wget https://ghproxy.com/https://github.com/ginuerzh/gost/releases/download/v2.11.5/gost-linux-amd64-2.11.5.gz
 wget https://ghproxy.com/https://github.com/fatedier/frp/releases/download/v0.45.0/frp_0.45.0_linux_amd64.tar.gz
+wget https://ghproxy.com/https://github.com/fatedier/frp/releases/download/v0.45.0/frp_0.45.0_windows_amd64.zip
 wget https://ghproxy.com/https://github.com/shadow1ng/fscan/releases/download/1.8.2/fscan64.exe
 wget https://ghproxy.com/https://github.com/shadow1ng/fscan/releases/download/1.8.2/fscan_amd64 
+
+#collect package
+wget https://ghproxy.com/https://github.com/b1gcat/hackhelper/releases/download/v1.0.1/cf
 
 #frp config
 echo "[common]
