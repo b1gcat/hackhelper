@@ -26,7 +26,7 @@ trusted-host = https://pypi.tuna.tsinghua.edu.cn" > ~/.pip/pip.conf
     #frp config
     echo "[common]
 #remote vps addr
-server_addr = 47.100.100.12
+server_addr = YOUR-IP
 server_port =  64447
 tls_enable = true
 pool_count = 5
