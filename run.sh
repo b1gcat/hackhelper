@@ -76,6 +76,9 @@ install_software() {
     install ${GITDIR}/b1gcat/hackhelper/releases/download/v1.0.1/Multiple.Database.Utilization.Tools.-.v2.0.7.zip
     install ${GITDIR}/b1gcat/hackhelper/releases/download/v1.0.1/jdk1.8.0_191.tar
     install ${GITDIR}b1gcat/hackhelper/releases/download/v1.0.1/httpsserv.go
+    install ${GITDIR}b1gcat/hackhelper/releases/download/v1.0.1/mimikatz_trunk_Win32.zip
+    install ${GITDIR}b1gcat/hackhelper/releases/download/v1.0.1/mimikatz_trunk_x64.zip
+
     #https://docs.xray.cool/#/scenario/reverse
     #https://stack.chaitin.com/tool/index
     install ${GITDIR}/chaitin/xpoc/releases/download/0.0.8/xpoc_linux_amd64.zip
