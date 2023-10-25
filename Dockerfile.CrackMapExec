@@ -1,0 +1,43 @@
+FROM python:3.11-slim
+
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
+ENV PIP_NO_CACHE_DIR=off
+
+WORKDIR /usr/src/crackmapexec
+
+RUN sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources
+RUN sed -i 's/http:/https:/g' /etc/apt/sources.list.d/debian.sources
+RUN mkdir -p  ~/.pip
+RUN echo "[global]"  > ~/.pip/pip.conf
+RUN echo "index-url = https://pypi.tuna.tsinghua.edu.cn/simple"  >> ~/.pip/pip.conf
+RUN echo "[install]" >> ~/.pip/pip.conf
+RUN echo "trusted-host = https://pypi.tuna.tsinghua.edu.cn" >> ~/.pip/pip.conf
+
+
+
+RUN apt-get update && \
+    apt-get install -y vim proxychains4 libffi-dev libxml2-dev libxslt-dev libssl-dev openssl autoconf g++ python3-dev curl git
+RUN apt-get update
+# Get Rust
+RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
+# Add .cargo/bin to PATH
+ENV PATH="/root/.cargo/bin:${PATH}"
+# Check cargo is visible
+RUN cargo --help
+
+COPY . .
+
+RUN git clone --recursive https://ghproxy.com/https://github.com/byt3bl33d3r/CrackMapExec
+WORKDIR /usr/src/crackmapexec/CrackMapExec
+
+RUN echo "[[tool.poetry.source]]" >> pyproject.toml
+RUN echo 'name = "aliyun"' >> pyproject.toml
+RUN echo 'url = "http://mirrors.aliyun.com/pypi/simple"' >>pyproject.toml
+RUN echo "default = true" >.pyproject.toml
+
+#RUN pip install poetry
+RUN pip install .
+#RUN poetry install
+
+ENTRYPOINT [ "cme" ]
