@@ -1,0 +1,13 @@
+version: "3.9"
+
+services:
+  ctf: # 
+    container_name: hack
+    privileged: true
+    build:
+      dockerfile: ./Dockerfile.ctf
+  cme: # 
+    container_name: hack
+    build:
+      dockerfile:./Dockerfile.CrackMapExec     
+  
