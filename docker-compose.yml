@@ -9,5 +9,5 @@ services:
   cme: # 
     container_name: hack
     build:
-      dockerfile:./Dockerfile.CrackMapExec     
+      dockerfile: ./Dockerfile.CrackMapExec     
   
