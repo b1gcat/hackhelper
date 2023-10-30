@@ -1,5 +1,7 @@
 FROM kalilinux/kali-rolling
 
+
+ARG GITHUB
 ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
 ENV PIP_NO_CACHE_DIR=off
@@ -23,10 +25,10 @@ RUN apt-key add archive-key.asc
 
 RUN dpkg --add-architecture i386
 RUN apt-get update && apt-get install libc6:i386 gcc-multilib binwalk gdbserver vim libssl-dev curl git wget cmake make unzip g++ pkg-config procps \
-   strace ltrace python3 python3-pip hydra libgmp3-dev libmpc-dev -y
+   strace ltrace python3 python3-pip hydra libgmp3-dev libmpc-dev python3.11-venv -y
 
 
-RUN git clone https://ghproxy.com/https://github.com/radareorg/radare2 -b 5.8.8
+RUN git clone ${GITHUB}/radareorg/radare2 -b 5.8.8
 WORKDIR /opt/radare2
 RUN sys/install.sh
 RUN r2pm -U
@@ -34,9 +36,15 @@ RUN r2pm -i r2ghidra
 
 
 WORKDIR /opt
-RUN git clone https://ghproxy.com/https://github.com/RsaCtfTool/RsaCtfTool.git
+RUN git clone ${GITHUB}/RsaCtfTool/RsaCtfTool.git
 WORKDIR /opt/RsaCtfTool
 RUN pip3 install -r "requirements.txt"
+
+WORKDIR /opt
+RUN python3 -m pip install pipx
+RUN git clone --recursive ${GITHUB}/byt3bl33d3r/CrackMapExec
+WORKDIR /opt/CrackMapExec
+RUN pipx install .
 
 WORKDIR /opt
 
