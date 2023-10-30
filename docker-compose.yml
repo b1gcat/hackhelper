@@ -1,4 +1,4 @@
-version: "3.2"
+version: "3"
 
 services:
   ctf: # 
@@ -6,10 +6,7 @@ services:
     privileged: true
     build:
       context: .
-      dockerfile: ./Dockerfile.ctf
-  cme: # 
-    container_name: hack
-    build:
-      context: .
-      dockerfile: ./Dockerfile.CrackMapExec     
+      dockerfile: ./Dockerfile
+      args:
+        GITHUB: "https://ghproxy.com/github.com"  
   
