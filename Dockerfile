@@ -25,7 +25,7 @@ RUN apt-key add archive-key.asc
 
 RUN dpkg --add-architecture i386
 RUN apt-get update && apt-get install libc6:i386 gcc-multilib binwalk gdbserver vim libssl-dev curl git wget cmake make unzip g++ pkg-config procps \
-   strace ltrace python3 python3-pip hydra libgmp3-dev libmpc-dev python3.11-venv -y
+   strace ltrace python3 python3-pip hydra libgmp3-dev libmpc-dev python3.11-venv aeskeyfind -y
 
 
 RUN git clone ${GITHUB}/radareorg/radare2 -b 5.8.8
