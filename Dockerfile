@@ -35,7 +35,7 @@ RUN r2pm -U
 RUN r2pm -i r2ghidra
 RUN r2pm -i r2d2
 RUN r2pm -i r2ai
-pip3 install r2pipe
+RUN pip3 install r2pipe
 
 
 WORKDIR /opt
