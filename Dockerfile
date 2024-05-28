@@ -28,11 +28,13 @@ RUN apt-get update && apt-get install libc6:i386 gcc-multilib binwalk gdbserver 
    strace ltrace python3 python3-pip hydra libgmp3-dev libmpc-dev python3.11-venv  -y
 
 
-RUN git clone ${GITHUB}/radareorg/radare2 -b 5.8.8
+RUN git clone ${GITHUB}/radareorg/radare2 -b 5.9.2
 WORKDIR /opt/radare2
 RUN sys/install.sh
 RUN r2pm -U
 RUN r2pm -i r2ghidra
+RUN r2pm -i r2d2
+RUN r2pm -i r2ai
 pip3 install r2pipe
 
 
