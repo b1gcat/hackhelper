@@ -33,7 +33,6 @@ WORKDIR /opt/radare2
 RUN sys/install.sh
 RUN r2pm -U
 RUN r2pm -i r2ghidra
-RUN r2pm -i r2d2
 RUN r2pm -i r2ai
 RUN pip3 install r2pipe
 
