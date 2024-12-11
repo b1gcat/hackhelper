@@ -28,26 +28,8 @@ RUN apt-get update && apt-get install libc6:i386 gcc-multilib binwalk gdbserver 
    strace ltrace python3 python3-pip hydra libgmp3-dev libmpc-dev python3.11-venv  -y
 
 
-RUN git clone ${GITHUB}/radareorg/radare2 -b 5.9.2
-WORKDIR /opt/radare2
-RUN sys/install.sh
-RUN r2pm -U
-RUN r2pm -i r2ghidra
-RUN r2pm -i r2ai
-RUN pip3 install r2pipe
+RUN curl -Ls https://github.com/radareorg/radare2/releases/download/5.9.8/radare2-5.9.8.tar.xz | tar xJv
+radare2-5.9.8/sys/install.sh
 
-
-WORKDIR /opt
-RUN git clone ${GITHUB}/RsaCtfTool/RsaCtfTool.git
-WORKDIR /opt/RsaCtfTool
-RUN pip3 install -r "requirements.txt"
-
-WORKDIR /opt
-RUN python3 -m pip install pipx
-RUN git clone --recursive ${GITHUB}/byt3bl33d3r/CrackMapExec
-WORKDIR /opt/CrackMapExec
-RUN pipx install .
-
-WORKDIR /opt
 
 ENTRYPOINT [ "/bin/bash" ]
