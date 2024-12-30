@@ -6,4 +6,4 @@ echo  "deb-src https://mirrors.aliyun.com/kali kali-rolling main non-free contri
 
 dpkg --add-architecture i386
 apt-get update && apt-get install libc6:i386 gcc-multilib binwalk vim libssl-dev curl git wget cmake make unzip g++ pkg-config procps \
-   strace ltrace hydra libgmp3-dev libmpc-dev  -y
+   strace ltrace hydra libgmp3-dev libmpc-dev  gdbserver -y
