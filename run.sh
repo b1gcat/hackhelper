@@ -10,11 +10,47 @@ YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # 恢复默认颜色
 
+# GitHub加速地址配置
+show_accelerator_options() {
+    echo -e "${BLUE}=============================================${NC}"
+    echo -e "${YELLOW}[!] 检测到需要从GitHub下载资源，可能存在网络问题${NC}"
+    echo -e "${YELLOW}[!] 请选择一个GitHub加速服务（推荐国内镜像）：${NC}"
+    echo -e "${YELLOW}1)${NC} 不使用加速（默认，可能很慢）"
+    echo -e "${YELLOW}2)${NC} GitHub镜像 (github.com.cnpmjs.org) - 推荐"
+    echo -e "${YELLOW}3)${NC} FastGit镜像 (hub.fastgit.xyz) - 备选"
+    echo -e "${YELLOW}4)${NC} GitClone镜像 (gitclone.com/github.com) - 备选"
+    echo -e "${YELLOW}5)${NC} 自定义加速地址"
+    echo -e "${BLUE}=============================================${NC}"
+    read -p "请选择加速服务 [1-5]: " accel_choice
+
+    # 设置加速前缀
+    case "$accel_choice" in
+        1) GITHUB_PREFIX="https://github.com" ;;
+        2) GITHUB_PREFIX="https://github.com.cnpmjs.org" ;;
+        3) GITHUB_PREFIX="https://hub.fastgit.xyz" ;;
+        4) GITHUB_PREFIX="https://gitclone.com/github.com" ;;
+        5) 
+            read -p "请输入自定义加速前缀（例如https://mirror.github.com）: " custom_prefix
+            GITHUB_PREFIX="$custom_prefix"
+            ;;
+        *) 
+            echo -e "${YELLOW}[!] 使用默认设置（不加速）${NC}"
+            GITHUB_PREFIX="https://github.com"
+            ;;
+    esac
+
+    echo -e "${GREEN}[✓] 已选择加速地址: ${GITHUB_PREFIX}${NC}"
+    echo
+}
+
 # 显示欢迎信息
 echo -e "${BLUE}=============================================${NC}"
-echo -e "${BLUE}        安全工具自动安装脚本 v1.3${NC}"
+echo -e "${BLUE}        安全工具自动安装脚本 v1.4${NC}"
 echo -e "${BLUE}=============================================${NC}"
 echo
+
+# 显示加速选项
+show_accelerator_options
 
 # 检查是否以root权限运行
 if [ "$(id -u)" -ne 0 ]; then
@@ -62,7 +98,7 @@ install_dependencies() {
     echo -e "${GREEN}[✓] 依赖安装完成${NC}"
 }
 
-# 定义工具安装函数
+# 定义工具安装函数（使用GITHUB_PREFIX变量）
 
 # 安装WhatWeb
 install_whatweb() {
@@ -78,14 +114,14 @@ install_nuclei() {
     # 创建目录
     mkdir -p nuclei && cd nuclei || return 1
     
-    # 下载Interactsh
-    wget -q https://github.com/projectdiscovery/interactsh/releases/download/v1.2.4/interactsh-server_1.2.4_linux_amd64.zip || { echo -e "${RED}下载Interactsh失败${NC}"; cd ..; return 1; }
+    # 下载Interactsh（使用加速地址）
+    wget -q "${GITHUB_PREFIX}/projectdiscovery/interactsh/releases/download/v1.2.4/interactsh-server_1.2.4_linux_amd64.zip" || { echo -e "${RED}下载Interactsh失败${NC}"; cd ..; return 1; }
     unzip -q interactsh-server_1.2.4_linux_amd64.zip || { echo -e "${RED}解压Interactsh失败${NC}"; cd ..; return 1; }
     chmod +x interactsh-server
     mv interactsh-server /usr/local/bin/ || { echo -e "${RED}移动Interactsh失败${NC}"; cd ..; return 1; }
     
-    # 下载Nuclei
-    wget -q https://github.com/projectdiscovery/nuclei/releases/download/v3.4.7/nuclei_3.4.7_linux_amd64.zip || { echo -e "${RED}下载Nuclei失败${NC}"; cd ..; return 1; }
+    # 下载Nuclei（使用加速地址）
+    wget -q "${GITHUB_PREFIX}/projectdiscovery/nuclei/releases/download/v3.4.7/nuclei_3.4.7_linux_amd64.zip" || { echo -e "${RED}下载Nuclei失败${NC}"; cd ..; return 1; }
     unzip -q nuclei_3.4.7_linux_amd64.zip || { echo -e "${RED}解压Nuclei失败${NC}"; cd ..; return 1; }
     chmod +x nuclei
     mv nuclei /usr/local/bin/ || { echo -e "${RED}移动Nuclei失败${NC}"; cd ..; return 1; }
@@ -103,8 +139,8 @@ install_rustscan() {
     # 创建目录
     mkdir -p rustscan && cd rustscan || return 1
     
-    # 下载RustScan
-    wget -q https://github.com/bee-san/RustScan/releases/download/2.4.1/x86_64-linux-rustscan.tar.gz.zip || { echo -e "${RED}下载RustScan失败${NC}"; cd ..; return 1; }
+    # 下载RustScan（使用加速地址）
+    wget -q "${GITHUB_PREFIX}/bee-san/RustScan/releases/download/2.4.1/x86_64-linux-rustscan.tar.gz.zip" || { echo -e "${RED}下载RustScan失败${NC}"; cd ..; return 1; }
     unzip -q x86_64-linux-rustscan.tar.gz.zip || { echo -e "${RED}解压RustScan失败${NC}"; cd ..; return 1; }
     tar -xzf x86_64-unknown-linux-musl/rustscan-2.4.1-x86_64-unknown-linux-musl.tar.gz || { echo -e "${RED}解压RustScan tar包失败${NC}"; cd ..; return 1; }
     chmod +x rustscan
@@ -123,11 +159,11 @@ install_gobuster() {
     # 创建目录
     mkdir -p gobuster && cd gobuster || return 1
     
-    # 下载Gobuster
+    # 下载Gobuster（使用加速地址）
     if [ "$(uname -m)" = "x86_64" ]; then
-        wget -q https://github.com/OJ/gobuster/releases/download/v3.7.0/gobuster_Linux_amd64.tar.gz || { echo -e "${RED}下载Gobuster失败${NC}"; cd ..; return 1; }
+        wget -q "${GITHUB_PREFIX}/OJ/gobuster/releases/download/v3.7.0/gobuster_Linux_amd64.tar.gz" || { echo -e "${RED}下载Gobuster失败${NC}"; cd ..; return 1; }
     else
-        wget -q https://github.com/OJ/gobuster/releases/download/v3.7.0/gobuster_Linux_arm64.tar.gz || { echo -e "${RED}下载Gobuster失败${NC}"; cd ..; return 1; }
+        wget -q "${GITHUB_PREFIX}/OJ/gobuster/releases/download/v3.7.0/gobuster_Linux_arm64.tar.gz" || { echo -e "${RED}下载Gobuster失败${NC}"; cd ..; return 1; }
     fi
     
     tar -xzf gobuster_Linux_*_amd64.tar.gz || { echo -e "${RED}解压Gobuster失败${NC}"; cd ..; return 1; }
@@ -143,7 +179,7 @@ install_gobuster() {
 # 安装SQLMap
 install_sqlmap() {
     echo -e "${YELLOW}[*] 正在安装SQLMap...${NC}"
-    git clone -q https://github.com/sqlmapproject/sqlmap.git || { echo -e "${RED}克隆SQLMap仓库失败${NC}"; return 1; }
+    git clone -q "${GITHUB_PREFIX}/sqlmapproject/sqlmap.git" || { echo -e "${RED}克隆SQLMap仓库失败${NC}"; return 1; }
     ln -s "$TOOLS_DIR/sqlmap/sqlmap.py" /usr/local/bin/sqlmap || { echo -e "${RED}创建SQLMap符号链接失败${NC}"; return 1; }
     echo -e "${GREEN}[✓] SQLMap安装完成${NC}"
 }
@@ -151,7 +187,7 @@ install_sqlmap() {
 # 下载SecLists字典
 install_seclists() {
     echo -e "${YELLOW}[*] 正在下载SecLists字典...${NC}"
-    git clone -q https://github.com/danielmiessler/SecLists.git || { echo -e "${RED}克隆SecLists仓库失败${NC}"; return 1; }
+    git clone -q "${GITHUB_PREFIX}/danielmiessler/SecLists.git" || { echo -e "${RED}克隆SecLists仓库失败${NC}"; return 1; }
     echo -e "${GREEN}[✓] SecLists字典下载完成${NC}"
 }
 
@@ -203,11 +239,15 @@ install_frp() {
         return 1
     fi
     
-    # 下载并安装frp
+    # 下载并安装frp（使用加速地址）
     echo -e "${YELLOW}[*] 下载frp for Linux...${NC}"
-    wget -q https://github.com/fatedier/frp/releases/download/v0.63.0/frp_0.63.0_linux_${FRP_ARCH}.tar.gz || { echo -e "${RED}下载frp失败${NC}"; cd ..; return 1; }
+    wget -q "${GITHUB_PREFIX}/fatedier/frp/releases/download/v0.63.0/frp_0.63.0_linux_${FRP_ARCH}.tar.gz" || { echo -e "${RED}下载frp失败${NC}"; cd ..; return 1; }
     tar -xzf frp_0.63.0_linux_${FRP_ARCH}.tar.gz || { echo -e "${RED}解压frp失败${NC}"; cd ..; return 1; }
     mv frp_0.63.0_linux_${FRP_ARCH} frp_linux_${FRP_ARCH}
+    
+    # 复制二进制文件
+    cp frp_linux_${FRP_ARCH}/frps /usr/local/bin/
+    cp frp_linux_${FRP_ARCH}/frpc /usr/local/bin/
     
     # 创建配置目录
     mkdir -p /etc/frp
@@ -215,10 +255,6 @@ install_frp() {
     # 复制配置文件
     cp frp_linux_${FRP_ARCH}/frps.ini /etc/frp/
     cp frp_linux_${FRP_ARCH}/frpc.ini /etc/frp/
-    
-    # 复制二进制文件
-    cp frp_linux_${FRP_ARCH}/frps /usr/local/bin/
-    cp frp_linux_${FRP_ARCH}/frpc /usr/local/bin/
     
     # 创建systemd服务文件
     cat > /etc/systemd/system/frps.service << EOF
@@ -252,9 +288,9 @@ EOF
     # 重载systemd
     systemctl daemon-reload
     
-    # 下载Windows版本供参考
+    # 下载Windows版本供参考（使用加速地址）
     echo -e "${YELLOW}[*] 下载frp for Windows (供参考)...${NC}"
-    wget -q https://github.com/fatedier/frp/releases/download/v0.63.0/frp_0.63.0_windows_amd64.zip || { echo -e "${RED}下载Windows版frp失败${NC}"; cd ..; return 1; }
+    wget -q "${GITHUB_PREFIX}/fatedier/frp/releases/download/v0.63.0/frp_0.63.0_windows_amd64.zip" || { echo -e "${RED}下载Windows版frp失败${NC}"; cd ..; return 1; }
     unzip -q frp_0.63.0_windows_amd64.zip -d frp_windows_amd64 || { echo -e "${RED}解压Windows版frp失败${NC}"; cd ..; return 1; }
     
     # 清理
@@ -283,9 +319,9 @@ install_gost() {
         return 1
     fi
     
-    # 下载并安装gost
+    # 下载并安装gost（使用加速地址）
     echo -e "${YELLOW}[*] 下载gost for Linux...${NC}"
-    wget -q https://github.com/ginuerzh/gost/releases/download/v2.12.0/gost_2.12.0_linux_${GOST_ARCH}.tar.gz || { echo -e "${RED}下载gost失败${NC}"; cd ..; return 1; }
+    wget -q "${GITHUB_PREFIX}/ginuerzh/gost/releases/download/v2.12.0/gost_2.12.0_linux_${GOST_ARCH}.tar.gz" || { echo -e "${RED}下载gost失败${NC}"; cd ..; return 1; }
     tar -xzf gost_2.12.0_linux_${GOST_ARCH}.tar.gz || { echo -e "${RED}解压gost失败${NC}"; cd ..; return 1; }
     
     # 复制二进制文件
