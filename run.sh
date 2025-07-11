@@ -52,7 +52,7 @@ retry() {
 
 # 显示欢迎信息
 echo -e "${BLUE}=============================================${NC}"
-echo -e "${BLUE}        安全工具自动安装脚本 v1.7${NC}"
+echo -e "${BLUE}        安全工具自动安装脚本 v1.8${NC}"
 echo -e "${BLUE}=============================================${NC}"
 echo
 
@@ -209,12 +209,6 @@ install_metasploit() {
     # 更新并安装
     cmd="apt-get update -y && apt-get install -y metasploit-framework"
     retry "$cmd" "Metasploit Framework" || return 1
-    
-    # 初始化数据库（可选）
-    read -p "是否初始化Metasploit数据库？(y/N): " init_db
-    if [[ "$init_db" =~ ^[Yy]$ ]]; then
-        msfdb init || echo -e "${YELLOW}[!] 数据库初始化失败，请手动执行'msfdb init'${NC}"
-    fi
 }
 
 # 安装frp
@@ -237,29 +231,17 @@ install_frp() {
     # 下载并安装frp
     cmd="wget -q ${GITHUB_PREFIX}/fatedier/frp/releases/download/v0.63.0/frp_0.63.0_linux_${FRP_ARCH}.tar.gz && \
          tar -xzf frp_0.63.0_linux_${FRP_ARCH}.tar.gz && \
-         mv frp_0.63.0_linux_${FRP_ARCH} frp_linux_${FRP_ARCH} && \
-         cp frp_linux_${FRP_ARCH}/frps /usr/local/bin/ && \
-         cp frp_linux_${FRP_ARCH}/frpc /usr/local/bin/"
+         cp frp_0.63.0_linux_${FRP_ARCH}/frps /usr/local/bin/ && \
+         cp frp_0.63.0_linux_${FRP_ARCH}/frpc /usr/local/bin/"
          
     retry "$cmd" "frp" "frp_0.63.0_linux_${FRP_ARCH}.tar.gz" || { cd ..; return 1; }
-    
-    # 创建配置目录
-    mkdir -p /etc/frp
-    
-    # 复制配置文件
-    cp frp_linux_${FRP_ARCH}/frps.ini /etc/frp/
-    cp frp_linux_${FRP_ARCH}/frpc.ini /etc/frp/
-    
-    # 下载Windows版本供参考
-    wget -q "${GITHUB_PREFIX}/fatedier/frp/releases/download/v0.63.0/frp_0.63.0_windows_amd64.zip" || { echo -e "${RED}下载Windows版frp失败${NC}"; cd ..; return 1; }
-    unzip -q -o frp_0.63.0_windows_amd64.zip -d frp_windows_amd64 || { echo -e "${RED}解压Windows版frp失败${NC}"; cd ..; return 1; }
     
     # 清理
     cd ..
     
     echo -e "${GREEN}[✓] frp安装完成${NC}"
-    echo -e "${BLUE}[!] 配置文件位于: /etc/frp/frps.ini 或 /etc/frp/frpc.ini${NC}"
-    echo -e "${BLUE}[!] 使用命令 'frps -c /etc/frp/frps.ini' 或 'frpc -c /etc/frp/frpc.ini' 手动启动${NC}"
+    echo -e "${BLUE}[!] 配置文件需要手动创建或从官方获取${NC}"
+    echo -e "${BLUE}[!] 使用命令 'frps -c /path/to/frps.ini' 或 'frpc -c /path/to/frpc.ini' 启动${NC}"
 }
 
 # 安装gost
@@ -286,43 +268,12 @@ install_gost() {
          
     retry "$cmd" "gost" "gost_2.12.0_linux_${GOST_ARCH}.tar.gz" || { cd ..; return 1; }
     
-    # 创建配置目录
-    mkdir -p /etc/gost
-    
-    # 创建默认配置文件
-    cat > /etc/gost/config.yaml << EOF
-# GOST默认配置文件
-# 更多配置示例请参考: https://github.com/ginuerzh/gost/blob/master/config/config_example.yaml
-
-# 监听HTTP代理
-services:
-  - name: http-proxy
-    addr: :8080
-    handler:
-      type: http
-    listener:
-      type: tcp
-
-# 转发规则
-chains:
-  - name: direct
-    hops:
-      - name: hop0
-        nodes:
-          - name: direct
-            addr: :0
-            connector:
-              type: direct
-            dialer:
-              type: direct
-EOF
-    
     # 清理
     cd ..
     
     echo -e "${GREEN}[✓] gost安装完成${NC}"
-    echo -e "${BLUE}[!] 配置文件位于: /etc/gost/config.yaml${NC}"
-    echo -e "${BLUE}[!] 使用命令 'gost -C /etc/gost/config.yaml' 手动启动${NC}"
+    echo -e "${BLUE}[!] 配置文件需要手动创建或从官方获取${NC}"
+    echo -e "${BLUE}[!] 使用命令 'gost -C /path/to/config.yaml' 启动${NC}"
 }
 
 # 安装所有工具
