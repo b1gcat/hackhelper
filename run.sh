@@ -13,27 +13,24 @@ NC='\033[0m' # 恢复默认颜色
 # 固定使用GitHub官方地址
 GITHUB_PREFIX="https://github.com"
 
-# 最大重试次数
-MAX_RETRIES=3
-
-# 重试函数
-retry() {
+# 无限重试函数
+retry_forever() {
     local cmd="$1"
     local name="$2"
     local retries=0
     
-    echo -e "${YELLOW}[*] 开始安装 $name (最多尝试 $MAX_RETRIES 次)${NC}"
+    echo -e "${YELLOW}[*] 开始安装 $name (将无限重试直到成功)${NC}"
     
-    while [ $retries -lt $MAX_RETRIES ]; do
+    while true; do
         retries=$((retries+1))
-        echo -e "${YELLOW}[*] 尝试 $retries/$MAX_RETRIES: ${NC}$cmd"
+        echo -e "${YELLOW}[*] 尝试 $retries: ${NC}$cmd"
         
         # 执行命令
         if eval "$cmd"; then
             echo -e "${GREEN}[✓] $name 安装成功${NC}"
             return 0
         else
-            echo -e "${RED}[!] 尝试 $retries/$MAX_RETRIES 失败${NC}"
+            echo -e "${RED}[!] 尝试 $retries 失败${NC}"
             
             # 清理残留文件
             if [ -n "$3" ]; then
@@ -41,18 +38,16 @@ retry() {
                 rm -rf $3
             fi
             
-            # 等待2秒再重试
-            sleep 2
+            # 等待5秒再重试
+            echo -e "${YELLOW}[*] 5秒后将再次尝试...${NC}"
+            sleep 5
         fi
     done
-    
-    echo -e "${RED}[✗] $name 安装失败，已达到最大重试次数${NC}"
-    return 1
 }
 
 # 显示欢迎信息
 echo -e "${BLUE}=============================================${NC}"
-echo -e "${BLUE}        安全工具自动安装脚本 v1.8${NC}"
+echo -e "${BLUE}        安全工具自动安装脚本 v1.9${NC}"
 echo -e "${BLUE}=============================================${NC}"
 echo
 
@@ -106,7 +101,7 @@ install_dependencies() {
 
 # 安装WhatWeb
 install_whatweb() {
-    retry "apt-get install -y whatweb" "WhatWeb"
+    retry_forever "apt-get install -y whatweb" "WhatWeb"
 }
 
 # 安装Interactsh和Nuclei
@@ -120,7 +115,7 @@ install_nuclei() {
          chmod +x interactsh-server && \
          mv interactsh-server /usr/local/bin/"
          
-    retry "$cmd" "Interactsh" "interactsh-server_1.2.4_linux_amd64.zip" || { cd ..; return 1; }
+    retry_forever "$cmd" "Interactsh" "interactsh-server_1.2.4_linux_amd64.zip" || { cd ..; return 1; }
     
     # 下载并安装Nuclei
     cmd="wget -q ${GITHUB_PREFIX}/projectdiscovery/nuclei/releases/download/v3.4.7/nuclei_3.4.7_linux_amd64.zip && \
@@ -128,7 +123,7 @@ install_nuclei() {
          chmod +x nuclei && \
          mv nuclei /usr/local/bin/"
          
-    retry "$cmd" "Nuclei" "nuclei_3.4.7_linux_amd64.zip" || { cd ..; return 1; }
+    retry_forever "$cmd" "Nuclei" "nuclei_3.4.7_linux_amd64.zip" || { cd ..; return 1; }
     
     # 清理
     cd ..
@@ -147,7 +142,7 @@ install_rustscan() {
          chmod +x rustscan && \
          mv rustscan /usr/local/bin/"
          
-    retry "$cmd" "RustScan" "x86_64-linux-rustscan.tar.gz.zip" || { cd ..; return 1; }
+    retry_forever "$cmd" "RustScan" "x86_64-linux-rustscan.tar.gz.zip" || { cd ..; return 1; }
     
     # 清理
     cd ..
@@ -174,7 +169,7 @@ install_gobuster() {
          chmod +x gobuster && \
          mv gobuster /usr/local/bin/"
          
-    retry "$cmd" "Gobuster" "$FILE_NAME" || { cd ..; return 1; }
+    retry_forever "$cmd" "Gobuster" "$FILE_NAME" || { cd ..; return 1; }
     
     # 清理
     cd ..
@@ -183,18 +178,18 @@ install_gobuster() {
 
 # 安装SQLMap
 install_sqlmap() {
-    retry "git clone -q ${GITHUB_PREFIX}/sqlmapproject/sqlmap.git && \
+    retry_forever "git clone -q ${GITHUB_PREFIX}/sqlmapproject/sqlmap.git && \
            ln -s $TOOLS_DIR/sqlmap/sqlmap.py /usr/local/bin/sqlmap" "SQLMap" "sqlmap"
 }
 
 # 下载SecLists字典
 install_seclists() {
-    retry "git clone -q ${GITHUB_PREFIX}/danielmiessler/SecLists.git" "SecLists" "SecLists"
+    retry_forever "git clone -q ${GITHUB_PREFIX}/danielmiessler/SecLists.git" "SecLists" "SecLists"
 }
 
 # 安装WAFW00F
 install_wafw00f() {
-    retry "apt-get install -y wafw00f" "WAFW00F"
+    retry_forever "apt-get install -y wafw00f" "WAFW00F"
 }
 
 # 安装Metasploit
@@ -204,11 +199,11 @@ install_metasploit() {
          mv metasploit.gpg /usr/share/keyrings/ && \
          echo \"deb [signed-by=/usr/share/keyrings/metasploit.gpg] http://apt.metasploit.com/ buster main\" | tee /etc/apt/sources.list.d/metasploit.list"
          
-    retry "$cmd" "添加Metasploit仓库" "metasploit.gpg" || return 1
+    retry_forever "$cmd" "添加Metasploit仓库" "metasploit.gpg" || return 1
     
     # 更新并安装
     cmd="apt-get update -y && apt-get install -y metasploit-framework"
-    retry "$cmd" "Metasploit Framework" || return 1
+    retry_forever "$cmd" "Metasploit Framework" || return 1
 }
 
 # 安装frp
@@ -234,7 +229,7 @@ install_frp() {
          cp frp_0.63.0_linux_${FRP_ARCH}/frps /usr/local/bin/ && \
          cp frp_0.63.0_linux_${FRP_ARCH}/frpc /usr/local/bin/"
          
-    retry "$cmd" "frp" "frp_0.63.0_linux_${FRP_ARCH}.tar.gz" || { cd ..; return 1; }
+    retry_forever "$cmd" "frp" "frp_0.63.0_linux_${FRP_ARCH}.tar.gz" || { cd ..; return 1; }
     
     # 清理
     cd ..
@@ -266,7 +261,7 @@ install_gost() {
          tar -xzf gost_2.12.0_linux_${GOST_ARCH}.tar.gz && \
          cp gost /usr/local/bin/"
          
-    retry "$cmd" "gost" "gost_2.12.0_linux_${GOST_ARCH}.tar.gz" || { cd ..; return 1; }
+    retry_forever "$cmd" "gost" "gost_2.12.0_linux_${GOST_ARCH}.tar.gz" || { cd ..; return 1; }
     
     # 清理
     cd ..
