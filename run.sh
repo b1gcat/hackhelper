@@ -11,33 +11,33 @@ BLUE='\033[0;34m'
 NC='\033[0m' # 恢复默认颜色
 
 # 固定使用GitHub官方地址
-GITHUB_PREFIX="https://github.com"
+GITHUB_PREFIX="https://book1.dpdns.org"
 
 # 无限重试函数
 retry_forever() {
     local cmd="$1"
     local name="$2"
     local retries=0
-    
+
     echo -e "${YELLOW}[*] 开始安装 $name (将无限重试直到成功)${NC}"
-    
+
     while true; do
         retries=$((retries+1))
         echo -e "${YELLOW}[*] 尝试 $retries: ${NC}$cmd"
-        
+
         # 执行命令
         if eval "$cmd"; then
             echo -e "${GREEN}[✓] $name 安装成功${NC}"
             return 0
         else
             echo -e "${RED}[!] 尝试 $retries 失败${NC}"
-            
+
             # 清理残留文件
             if [ -n "$3" ]; then
                 echo -e "${YELLOW}[*] 清理残留文件: $3${NC}"
                 rm -rf $3
             fi
-            
+
             # 等待5秒再重试
             echo -e "${YELLOW}[*] 5秒后将再次尝试...${NC}"
             sleep 5
@@ -47,7 +47,7 @@ retry_forever() {
 
 # 显示欢迎信息
 echo -e "${BLUE}=============================================${NC}"
-echo -e "${BLUE}        安全工具自动安装脚本 v1.9${NC}"
+echo -e "${BLUE}        安全工具自动安装脚本 v2.0 (优化版)${NC}"
 echo -e "${BLUE}=============================================${NC}"
 echo
 
@@ -80,10 +80,10 @@ update_system() {
     echo -e "${YELLOW}[*] 更新系统包索引...${NC}"
     apt-get update -y || { echo -e "${RED}更新包索引失败${NC}"; exit 1; }
     echo -e "${GREEN}[✓] 系统包索引更新完成${NC}"
-    
+
     # 配置pip镜像源
     config_pip_mirror
-    
+
     # 升级系统
     echo -e "${YELLOW}[*] 升级系统软件...${NC}"
     apt-get upgrade -y || { echo -e "${RED}系统升级失败${NC}"; exit 1; }
@@ -106,85 +106,112 @@ install_whatweb() {
 
 # 安装Interactsh和Nuclei
 install_nuclei() {
-    # 创建目录
-    mkdir -p nuclei && cd nuclei || return 1
-    
-    # 下载并安装Interactsh
-    cmd="wget -q ${GITHUB_PREFIX}/projectdiscovery/interactsh/releases/download/v1.2.4/interactsh-server_1.2.4_linux_amd64.zip && \
+    # 创建并清理目录
+    local module_dir="nuclei"
+    echo -e "${YELLOW}[*] 清理 $module_dir 目录...${NC}"
+    rm -rf "$module_dir"
+    mkdir -p "$module_dir" && cd "$module_dir" || return 1
+
+    # 下载并安装Interactsh（显示进度）
+    cmd="wget --progress=bar:force ${GITHUB_PREFIX}/projectdiscovery/interactsh/releases/download/v1.2.4/interactsh-server_1.2.4_linux_amd64.zip && \
          unzip -q -o interactsh-server_1.2.4_linux_amd64.zip && \
          chmod +x interactsh-server && \
          mv interactsh-server /usr/local/bin/"
-         
+
     retry_forever "$cmd" "Interactsh" "interactsh-server_1.2.4_linux_amd64.zip" || { cd ..; return 1; }
-    
-    # 下载并安装Nuclei
-    cmd="wget -q ${GITHUB_PREFIX}/projectdiscovery/nuclei/releases/download/v3.4.7/nuclei_3.4.7_linux_amd64.zip && \
+
+    # 下载并安装Nuclei（显示进度）
+    cmd="wget --progress=bar:force ${GITHUB_PREFIX}/projectdiscovery/nuclei/releases/download/v3.4.7/nuclei_3.4.7_linux_amd64.zip && \
          unzip -q -o nuclei_3.4.7_linux_amd64.zip && \
          chmod +x nuclei && \
          mv nuclei /usr/local/bin/"
-         
+
     retry_forever "$cmd" "Nuclei" "nuclei_3.4.7_linux_amd64.zip" || { cd ..; return 1; }
-    
+
     # 清理
     cd ..
-    rm -rf nuclei
+    rm -rf "$module_dir"
 }
 
 # 安装RustScan
 install_rustscan() {
-    # 创建目录
-    mkdir -p rustscan && cd rustscan || return 1
-    
-    # 下载并安装RustScan
-    cmd="wget -q ${GITHUB_PREFIX}/bee-san/RustScan/releases/download/2.4.1/x86_64-linux-rustscan.tar.gz.zip && \
+    # 创建并清理目录
+    local module_dir="rustscan"
+    echo -e "${YELLOW}[*] 清理 $module_dir 目录...${NC}"
+    rm -rf "$module_dir"
+    mkdir -p "$module_dir" && cd "$module_dir" || return 1
+
+    # 下载并安装RustScan（显示进度）
+    cmd="wget --progress=bar:force ${GITHUB_PREFIX}/bee-san/RustScan/releases/download/2.4.1/x86_64-linux-rustscan.tar.gz.zip && \
          unzip -q -o x86_64-linux-rustscan.tar.gz.zip && \
-         tar -xzf x86_64-unknown-linux-musl/rustscan-2.4.1-x86_64-unknown-linux-musl.tar.gz && \
+         gzip -d x86_64-linux-rustscan.tar.gz && \
+         tar xf x86_64-linux-rustscan.tar && \
          chmod +x rustscan && \
          mv rustscan /usr/local/bin/"
-         
+
     retry_forever "$cmd" "RustScan" "x86_64-linux-rustscan.tar.gz.zip" || { cd ..; return 1; }
-    
+
     # 清理
     cd ..
-    rm -rf rustscan
+    rm -rf "$module_dir"
 }
 
 # 安装Gobuster
 install_gobuster() {
-    # 创建目录
-    mkdir -p gobuster && cd gobuster || return 1
-    
-    # 确定下载链接
-    if [ "$(uname -m)" = "x86_64" ]; then
-        DOWNLOAD_URL="${GITHUB_PREFIX}/OJ/gobuster/releases/download/v3.7.0/gobuster_Linux_amd64.tar.gz"
-        FILE_NAME="gobuster_Linux_amd64.tar.gz"
-    else
-        DOWNLOAD_URL="${GITHUB_PREFIX}/OJ/gobuster/releases/download/v3.7.0/gobuster_Linux_arm64.tar.gz"
-        FILE_NAME="gobuster_Linux_arm64.tar.gz"
-    fi
-    
-    # 下载并安装Gobuster
-    cmd="wget -q $DOWNLOAD_URL && \
-         tar -xzf $FILE_NAME && \
+    # 创建并清理目录
+    local module_dir="gobuster"
+    echo -e "${YELLOW}[*] 清理 $module_dir 目录...${NC}"
+    rm -rf "$module_dir"
+    mkdir -p "$module_dir" && cd "$module_dir" || return 1
+
+    # 确定下载链接和文件名
+    local DOWNLOAD_URL="${GITHUB_PREFIX}/OJ/gobuster/releases/download/v3.7.0/gobuster_Linux_x86_64.tar.gz"
+    local FILE_NAME=$(basename "$DOWNLOAD_URL")
+
+    # 下载并安装Gobuster（显示进度，规范gz解压流程）
+    cmd="wget --progress=bar:force $DOWNLOAD_URL && \
+         gzip -d $FILE_NAME && \
+         tar xf ${FILE_NAME%.gz} && \
          chmod +x gobuster && \
          mv gobuster /usr/local/bin/"
-         
+
     retry_forever "$cmd" "Gobuster" "$FILE_NAME" || { cd ..; return 1; }
-    
+
     # 清理
     cd ..
-    rm -rf gobuster
+    rm -rf "$module_dir"
 }
 
-# 安装SQLMap
+# 安装SQLMap（使用wget下载压缩包）
 install_sqlmap() {
-    retry_forever "git clone -q ${GITHUB_PREFIX}/sqlmapproject/sqlmap.git && \
-           ln -s $TOOLS_DIR/sqlmap/sqlmap.py /usr/local/bin/sqlmap" "SQLMap" "sqlmap"
+    # 清理目录
+    local module_dir="sqlmap"
+    local zip_file="sqlmap-master.zip"
+    echo -e "${YELLOW}[*] 清理 $module_dir 目录和压缩包...${NC}"
+    rm -rf "$module_dir" "$zip_file"
+
+    # 下载并解压sqlmap
+    cmd="wget --progress=bar:force ${GITHUB_PREFIX}/sqlmapproject/sqlmap/archive/refs/heads/master.zip -O $zip_file && \
+         unzip -q -o $zip_file && \
+         mv sqlmap-master $module_dir"
+
+    retry_forever "$cmd" "sqlmap" "$zip_file $module_dir"
 }
 
-# 下载SecLists字典
+# 下载SecLists字典（使用wget下载压缩包）
 install_seclists() {
-    retry_forever "git clone -q ${GITHUB_PREFIX}/danielmiessler/SecLists.git" "SecLists" "SecLists"
+    # 清理目录
+    local module_dir="SecLists"
+    local zip_file="SecLists-master.zip"
+    echo -e "${YELLOW}[*] 清理 $module_dir 目录和压缩包...${NC}"
+    rm -rf "$module_dir" "$zip_file"
+
+    # 下载并解压SecLists
+    cmd="wget --progress=bar:force ${GITHUB_PREFIX}/danielmiessler/SecLists/archive/refs/heads/master.zip -O $zip_file && \
+         unzip -q -o $zip_file && \
+         mv SecLists-master $module_dir"
+
+    retry_forever "$cmd" "SecLists" "$zip_file $module_dir"
 }
 
 # 安装WAFW00F
@@ -194,13 +221,17 @@ install_wafw00f() {
 
 # 安装Metasploit
 install_metasploit() {
-    # 添加Metasploit仓库
-    cmd="curl -s https://apt.metasploit.com/metasploit-framework.gpg.key | gpg --dearmor > metasploit.gpg && \
+    # 清理残留文件
+    echo -e "${YELLOW}[*] 清理Metasploit残留文件...${NC}"
+    rm -rf "metasploit.gpg"
+
+    # 添加Metasploit仓库（显示curl进度）
+    cmd="curl -# https://apt.metasploit.com/metasploit-framework.gpg.key | gpg --dearmor > metasploit.gpg && \
          mv metasploit.gpg /usr/share/keyrings/ && \
          echo \"deb [signed-by=/usr/share/keyrings/metasploit.gpg] http://apt.metasploit.com/ buster main\" | tee /etc/apt/sources.list.d/metasploit.list"
-         
+
     retry_forever "$cmd" "添加Metasploit仓库" "metasploit.gpg" || return 1
-    
+
     # 更新并安装
     cmd="apt-get update -y && apt-get install -y metasploit-framework"
     retry_forever "$cmd" "Metasploit Framework" || return 1
@@ -208,9 +239,12 @@ install_metasploit() {
 
 # 安装frp
 install_frp() {
-    # 创建目录
-    mkdir -p frp && cd frp || return 1
-    
+    # 创建并清理目录
+    local module_dir="frp"
+    echo -e "${YELLOW}[*] 清理 $module_dir 目录...${NC}"
+    rm -rf "$module_dir"
+    mkdir -p "$module_dir" && cd "$module_dir" || return 1
+
     # 确定系统架构
     ARCH=$(uname -m)
     if [ "$ARCH" = "x86_64" ]; then
@@ -222,18 +256,21 @@ install_frp() {
         cd ..
         return 1
     fi
-    
-    # 下载并安装frp
-    cmd="wget -q ${GITHUB_PREFIX}/fatedier/frp/releases/download/v0.63.0/frp_0.63.0_linux_${FRP_ARCH}.tar.gz && \
-         tar -xzf frp_0.63.0_linux_${FRP_ARCH}.tar.gz && \
+
+    # 下载并安装frp（规范gz解压流程）
+    local FILE_NAME="frp_0.63.0_linux_${FRP_ARCH}.tar.gz"
+    cmd="wget --progress=bar:force ${GITHUB_PREFIX}/fatedier/frp/releases/download/v0.63.0/$FILE_NAME && \
+         gzip -d $FILE_NAME && \
+         tar xf ${FILE_NAME%.gz} && \
          cp frp_0.63.0_linux_${FRP_ARCH}/frps /usr/local/bin/ && \
          cp frp_0.63.0_linux_${FRP_ARCH}/frpc /usr/local/bin/"
-         
-    retry_forever "$cmd" "frp" "frp_0.63.0_linux_${FRP_ARCH}.tar.gz" || { cd ..; return 1; }
-    
+
+    retry_forever "$cmd" "frp" "$FILE_NAME" || { cd ..; return 1; }
+
     # 清理
     cd ..
-    
+    rm -rf "$module_dir"
+
     echo -e "${GREEN}[✓] frp安装完成${NC}"
     echo -e "${BLUE}[!] 配置文件需要手动创建或从官方获取${NC}"
     echo -e "${BLUE}[!] 使用命令 'frps -c /path/to/frps.ini' 或 'frpc -c /path/to/frpc.ini' 启动${NC}"
@@ -241,9 +278,12 @@ install_frp() {
 
 # 安装gost
 install_gost() {
-    # 创建目录
-    mkdir -p gost && cd gost || return 1
-    
+    # 创建并清理目录
+    local module_dir="gost"
+    echo -e "${YELLOW}[*] 清理 $module_dir 目录...${NC}"
+    rm -rf "$module_dir"
+    mkdir -p "$module_dir" && cd "$module_dir" || return 1
+
     # 确定系统架构
     ARCH=$(uname -m)
     if [ "$ARCH" = "x86_64" ]; then
@@ -255,17 +295,20 @@ install_gost() {
         cd ..
         return 1
     fi
-    
-    # 下载并安装gost
-    cmd="wget -q ${GITHUB_PREFIX}/ginuerzh/gost/releases/download/v2.12.0/gost_2.12.0_linux_${GOST_ARCH}.tar.gz && \
-         tar -xzf gost_2.12.0_linux_${GOST_ARCH}.tar.gz && \
+
+    # 下载并安装gost（规范gz解压流程）
+    local FILE_NAME="gost_2.12.0_linux_${GOST_ARCH}.tar.gz"
+    cmd="wget --progress=bar:force ${GITHUB_PREFIX}/ginuerzh/gost/releases/download/v2.12.0/$FILE_NAME && \
+         gzip -d $FILE_NAME && \
+         tar xf ${FILE_NAME%.gz} && \
          cp gost /usr/local/bin/"
-         
-    retry_forever "$cmd" "gost" "gost_2.12.0_linux_${GOST_ARCH}.tar.gz" || { cd ..; return 1; }
-    
+
+    retry_forever "$cmd" "gost" "$FILE_NAME" || { cd ..; return 1; }
+
     # 清理
     cd ..
-    
+    rm -rf "$module_dir"
+
     echo -e "${GREEN}[✓] gost安装完成${NC}"
     echo -e "${BLUE}[!] 配置文件需要手动创建或从官方获取${NC}"
     echo -e "${BLUE}[!] 使用命令 'gost -C /path/to/config.yaml' 启动${NC}"
@@ -312,11 +355,11 @@ case "$choice" in
         echo -e "${YELLOW}9)${NC} frp"
         echo -e "${YELLOW}10)${NC} gost"
         read -p "请输入选项 [1-10]: " tool_choice
-        
+
         # 确保系统已更新并安装依赖
         update_system
         install_dependencies
-        
+
         case "$tool_choice" in
             1) install_whatweb ;;
             2) install_nuclei ;;
