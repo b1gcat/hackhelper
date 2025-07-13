@@ -1,3 +1,6 @@
+#podman run -it --privileged -p 11110:11110 -v ~/Desktop/tmp:/opt docker.io/kalilinux/kali-rolling bash
+
+
 echo "echo 0 >/proc/sys/kernel/randomize_va_space" >> ~/.bashrc
 apt-get update && apt-get install -y gnupg2 wget
 
